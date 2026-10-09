@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meow AI Agent — Your personal AI assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* everything scales off the 982 x 696 reference frame */
+    --u: clamp(0.8px, min(calc(100vw / 982), calc(100vh / 696)), 1.7px);
+    --gutter: calc(var(--u) * 21);
+    --ink: #050505;
+    --paper: #e7e7e7;
+  }
+
+  html, body { height: 100%; background: var(--paper); }
+
+  body {
+    font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .hero {
+    position: relative;
+    height: 100vh;
+    min-height: 460px;
+    width: 100%;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--paper);
+  }
+
+  .hero__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 62% 50%;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: calc(var(--u) * 80);
+    padding: 0 calc(var(--u) * 23) 0 var(--gutter);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+  }
+  .nav__logo { display: block; width: calc(var(--u) * 22); height: calc(var(--u) * 22); }
+  .nav__logo svg { display: block; width: 100%; height: 100%; }
+
+  .nav__links { display: flex; gap: calc(var(--u) * 25); list-style: none; }
+  .nav__links a {
+    font-size: calc(var(--u) * 11);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    transition: opacity .2s ease;
+  }
+  .nav__links a:hover { opacity: .55; }
+
+  .nav__toggle {
+    display: none;
+    width: calc(var(--u) * 40);
+    height: calc(var(--u) * 40);
+    margin-right: calc(var(--u) * -9);
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .nav__toggle span,
+  .nav__toggle span::before {
+    content: "";
+    display: block;
+    width: calc(var(--u) * 22);
+    height: calc(var(--u) * 2);
+    margin: 0 auto;
+    background: currentColor;
+    transition: transform .25s ease;
+  }
+  .nav__toggle span { transform: translateY(calc(var(--u) * -3.5)); }
+  .nav__toggle span::before { transform: translateY(calc(var(--u) * 7)); }
+  .nav.is-open .nav__toggle span { transform: rotate(45deg); }
+  .nav.is-open .nav__toggle span::before { transform: rotate(-90deg); }
+
+  /* ---------- headline ---------- */
+  .hero__title {
+    position: absolute;
+    top: 23.1%;
+    left: calc(var(--u) * 27);
+    width: calc(var(--u) * 396);
+    line-height: 0;
+  }
+  .hero__title svg { display: block; width: 100%; height: auto; fill: var(--ink); }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+  }
+
+  /* ---------- copy + actions ---------- */
+  .hero__body {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 17.4%;
+  }
+  .hero__lede {
+    font-size: calc(var(--u) * 13.3);
+    line-height: calc(var(--u) * 17);
+    letter-spacing: 0;
+    margin-bottom: calc(var(--u) * 46);
+  }
+  .hero__actions { display: flex; align-items: center; gap: calc(var(--u) * 17); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(var(--u) * 31);
+    padding: 0 calc(var(--u) * 19);
+    border-radius: calc(var(--u) * 2);
+    background: var(--ink);
+    color: #dcdcda;
+    font-size: calc(var(--u) * 11);
+    line-height: 1;
+    white-space: nowrap;
+    transition: background-color .2s ease, transform .2s ease;
+  }
+  .btn:hover { background: #2a2a2a; transform: translateY(-1px); }
+
+  .link {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--u) * 9);
+    font-size: calc(var(--u) * 11);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .link svg {
+    width: calc(var(--u) * 5);
+    height: calc(var(--u) * 8);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    transition: transform .2s ease;
+  }
+  .link:hover svg { transform: translateX(calc(var(--u) * 3)); }
+
+  /* ---------- tablet / mobile ---------- */
+  @media (max-width: 720px) {
+    :root {
+      --u: clamp(0.8px, calc(100vw / 400), 1.5px);
+      --gutter: calc(var(--u) * 20);
+    }
+
+    .hero { min-height: calc(var(--u) * 620); }
+
+    /* the cat sits in a band between the headline and the copy */
+    .hero__media {
+      top: 27%;
+      height: 50%;
+      object-position: 73% 50%;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+              mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+    }
+
+    .nav { height: calc(var(--u) * 68); padding-right: var(--gutter); }
+    .nav__logo { width: calc(var(--u) * 26); height: calc(var(--u) * 26); }
+    .nav__toggle { display: block; }
+
+    .nav__links {
+      position: absolute;
+      top: 100%;
+      left: var(--gutter);
+      right: var(--gutter);
+      flex-direction: column;
+      gap: 0;
+      padding: calc(var(--u) * 6) calc(var(--u) * 16);
+      background: var(--ink);
+      border-radius: calc(var(--u) * 2);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(calc(var(--u) * -6));
+      transition: opacity .2s ease, transform .2s ease, visibility .2s;
+    }
+    .nav.is-open .nav__links { opacity: 1; visibility: visible; transform: none; }
+    .nav__links a {
+      display: block;
+      padding: calc(var(--u) * 14) 0;
+      font-size: calc(var(--u) * 14);
+      color: #ececea;
+    }
+    .nav__links li + li { border-top: 1px solid rgba(255, 255, 255, .14); }
+
+    .hero__title {
+      top: calc(var(--u) * 92);
+      left: var(--gutter);
+      width: min(calc(100% - var(--gutter) * 2), calc(var(--u) * 396));
+    }
+
+    .hero__body { right: var(--gutter); bottom: calc(var(--u) * 36); }
+    .hero__lede {
+      font-size: calc(var(--u) * 14);
+      line-height: calc(var(--u) * 20);
+      margin-bottom: calc(var(--u) * 24);
+      max-width: 26em;
+    }
+    .hero__lede br { display: none; }
+    .btn { height: calc(var(--u) * 42); padding: 0 calc(var(--u) * 22); font-size: calc(var(--u) * 13); }
+    .link { font-size: calc(var(--u) * 13); }
+  }
+
+  /* short landscape phones */
+  @media (max-width: 720px) and (max-height: 520px) {
+    .hero__media { top: 0; height: 100%; object-position: 100% 50%; -webkit-mask-image: none; mask-image: none; }
+    .hero__title { width: calc(var(--u) * 230); top: calc(var(--u) * 70); }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <video class="hero__media" autoplay muted loop playsinline preload="auto"
+         poster="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261008_131819_f6c1a554-6417-497f-a8b7-585449018c39.png">
+    <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261008_131936_fe93478c-8802-4266-a258-b4f95767462c.mp4" type="video/mp4">
+  </video>
+
+  <header class="nav" id="nav">
+    <a class="nav__logo" href="#" aria-label="Meow AI Agent home">
+      <svg viewBox="0 0 22 22" aria-hidden="true">
+        <path fill="#050505" d="M0 0Q5.5 4.6 7 2.6Q11-1.6 15 2.6Q16.500 4.6 22 0V22Q16.500 17.400 15 19.400Q11 23.600 7 19.400Q5.500 17.400 0 22Z"/>
+        <path fill="#ececea" d="M5.800 6.600Q6.500 10.300 10.200 11Q6.500 11.700 5.800 15.400Q5.100 11.700 1.400 11Q5.100 10.300 5.800 6.600ZM16.200 6.600Q16.900 10.300 20.600 11Q16.900 11.700 16.200 15.400Q15.500 11.700 11.800 11Q15.500 10.300 16.200 6.600Z"/>
+      </svg>
+    </a>
+
+    <button class="nav__toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
+
+    <ul class="nav__links" id="navLinks">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </header>
+
+  <h1 class="hero__title">
+    <span class="sr-only">Meow AI Agent</span>
+    <svg viewBox="0 0 132 46" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 0h4v3h-4zM14 0h4v3h-4zM28 0h10v3h-10zM47 0h10v3h-10zM64 0h4v3h-4zM81 0h4v3h-4zM0 3h10v1h-10zM11 3h10v1h-10zM25 3h16v1h-16zM44 3h16v1h-16zM64 3h4v1h-4zM72 3h5v1h-5zM81 3h4v1h-4zM0 4h4v3h-4zM6 4h4v3h-4zM11 4h4v3h-4zM17 4h4v3h-4zM25 4h4v3h-4zM37 4h4v3h-4zM44 4h4v3h-4zM56 4h4v3h-4zM64 4h4v3h-4zM72 4h5v3h-5zM81 4h4v3h-4zM0 7h4v1h-4zM6 7h4v1h-4zM11 7h4v1h-4zM17 7h4v1h-4zM25 7h4v1h-4zM44 7h4v1h-4zM56 7h4v1h-4zM64 7h4v1h-4zM72 7h5v1h-5zM81 7h4v1h-4zM0 8h4v2h-4zM6 8h9v2h-9zM17 8h4v2h-4zM25 8h10v2h-10zM44 8h4v2h-4zM56 8h4v2h-4zM64 8h4v2h-4zM72 8h5v2h-5zM81 8h4v2h-4zM0 10h4v1h-4zM8 10h5v1h-5zM17 10h4v1h-4zM25 10h10v1h-10zM44 10h4v1h-4zM56 10h4v1h-4zM64 10h4v1h-4zM72 10h5v1h-5zM81 10h4v1h-4zM0 11h4v2h-4zM8 11h5v2h-5zM17 11h4v2h-4zM25 11h10v2h-10zM44 11h4v2h-4zM56 11h4v2h-4zM64 11h4v2h-4zM70 11h9v2h-9zM81 11h4v2h-4zM0 13h4v1h-4zM8 13h5v1h-5zM17 13h4v1h-4zM25 13h4v1h-4zM44 13h4v1h-4zM56 13h4v1h-4zM64 13h4v1h-4zM70 13h4v1h-4zM75 13h4v1h-4zM81 13h4v1h-4zM0 14h4v2h-4zM8 14h5v2h-5zM17 14h4v2h-4zM25 14h4v2h-4zM37 14h4v2h-4zM44 14h4v2h-4zM56 14h4v2h-4zM64 14h4v2h-4zM70 14h4v2h-4zM75 14h4v2h-4zM81 14h4v2h-4zM0 16h4v1h-4zM8 16h5v1h-5zM17 16h4v1h-4zM25 16h4v1h-4zM37 16h4v1h-4zM44 16h4v1h-4zM56 16h4v1h-4zM64 16h10v1h-10zM75 16h10v1h-10zM0 17h4v1h-4zM8 17h5v1h-5zM17 17h4v1h-4zM25 17h16v1h-16zM44 17h16v1h-16zM64 17h10v1h-10zM75 17h10v1h-10zM0 18h4v3h-4zM17 18h4v3h-4zM28 18h10v3h-10zM47 18h10v3h-10zM67 18h4v3h-4zM78 18h4v3h-4zM5 25h5v3h-5zM19 25h10v3h-10zM45 25h5v3h-5zM62 25h10v3h-10zM81 25h10v3h-10zM98 25h4v3h-4zM109 25h4v3h-4zM119 25h10v3h-10zM3 28h9v1h-9zM19 28h10v1h-10zM43 28h9v1h-9zM59 28h16v1h-16zM78 28h16v1h-16zM98 28h7v1h-7zM109 28h4v1h-4zM116 28h16v1h-16zM3 29h4v1h-4zM8 29h4v1h-4zM22 29h4v1h-4zM43 29h4v1h-4zM48 29h4v1h-4zM59 29h4v1h-4zM71 29h4v1h-4zM78 29h4v1h-4zM90 29h4v1h-4zM98 29h7v1h-7zM109 29h4v1h-4zM116 29h4v1h-4zM122 29h4v1h-4zM128 29h4v1h-4zM0 30h7v2h-7zM8 30h7v2h-7zM22 30h4v2h-4zM40 30h7v2h-7zM48 30h7v2h-7zM59 30h4v2h-4zM71 30h4v2h-4zM78 30h4v2h-4zM90 30h4v2h-4zM98 30h10v2h-10zM109 30h4v2h-4zM116 30h4v2h-4zM122 30h4v2h-4zM128 30h4v2h-4zM0 32h4v1h-4zM11 32h4v1h-4zM22 32h4v1h-4zM40 32h4v1h-4zM51 32h4v1h-4zM59 32h4v1h-4zM71 32h4v1h-4zM78 32h4v1h-4zM98 32h4v1h-4zM104 32h4v1h-4zM109 32h4v1h-4zM122 32h4v1h-4zM0 33h4v1h-4zM11 33h4v1h-4zM22 33h4v1h-4zM40 33h4v1h-4zM51 33h4v1h-4zM59 33h4v1h-4zM71 33h4v1h-4zM78 33h10v1h-10zM98 33h4v1h-4zM104 33h4v1h-4zM109 33h4v1h-4zM122 33h4v1h-4zM0 34h4v1h-4zM11 34h4v1h-4zM22 34h4v1h-4zM40 34h4v1h-4zM51 34h4v1h-4zM59 34h4v1h-4zM65 34h4v1h-4zM71 34h4v1h-4zM78 34h10v1h-10zM98 34h4v1h-4zM104 34h4v1h-4zM109 34h4v1h-4zM122 34h4v1h-4zM0 35h4v1h-4zM11 35h4v1h-4zM22 35h4v1h-4zM40 35h4v1h-4zM51 35h4v1h-4zM59 35h4v1h-4zM65 35h4v1h-4zM78 35h10v1h-10zM98 35h4v1h-4zM104 35h4v1h-4zM109 35h4v1h-4zM122 35h4v1h-4zM0 36h15v2h-15zM22 36h4v2h-4zM40 36h15v2h-15zM59 36h4v2h-4zM65 36h10v2h-10zM78 36h10v2h-10zM98 36h4v2h-4zM104 36h4v2h-4zM109 36h4v2h-4zM122 36h4v2h-4zM0 38h15v1h-15zM22 38h4v1h-4zM40 38h15v1h-15zM59 38h4v1h-4zM68 38h7v1h-7zM78 38h4v1h-4zM98 38h4v1h-4zM104 38h4v1h-4zM109 38h4v1h-4zM122 38h4v1h-4zM0 39h15v1h-15zM22 39h4v1h-4zM40 39h15v1h-15zM59 39h4v1h-4zM68 39h7v1h-7zM78 39h4v1h-4zM90 39h4v1h-4zM98 39h4v1h-4zM104 39h9v1h-9zM122 39h4v1h-4zM0 40h4v2h-4zM11 40h4v2h-4zM22 40h4v2h-4zM40 40h4v2h-4zM51 40h4v2h-4zM59 40h4v2h-4zM71 40h4v2h-4zM78 40h4v2h-4zM90 40h4v2h-4zM98 40h4v2h-4zM106 40h7v2h-7zM122 40h4v2h-4zM0 42h4v1h-4zM11 42h4v1h-4zM19 42h10v1h-10zM40 42h4v1h-4zM51 42h4v1h-4zM59 42h16v1h-16zM78 42h16v1h-16zM98 42h4v1h-4zM106 42h7v1h-7zM122 42h4v1h-4zM0 43h4v3h-4zM11 43h4v3h-4zM19 43h10v3h-10zM40 43h4v3h-4zM51 43h4v3h-4zM62 43h10v3h-10zM81 43h10v3h-10zM98 43h4v3h-4zM109 43h4v3h-4zM122 43h4v3h-4z"/></svg>
+  </h1>
+
+  <div class="hero__body">
+    <p class="hero__lede">Your personal AI assistant, helping you<br> manage tasks and make smarter decisions.</p>
+    <div class="hero__actions">
+      <a class="btn" href="#get-started">Get Started</a>
+      <a class="link" href="#how-it-works">See How It Works
+        <svg viewBox="0 0 5 8" aria-hidden="true"><path d="M.8.8 4 4 .8 7.200"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var nav = document.getElementById('nav');
+    var toggle = document.getElementById('navToggle');
+    function setOpen(open) {
+      nav.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', open);
+    }
+    toggle.addEventListener('click', function () { setOpen(!nav.classList.contains('is-open')); });
+    document.getElementById('navLinks').addEventListener('click', function (e) {
+      if (e.target.tagName === 'A') setOpen(false);
+    });
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelector('.hero__media').pause();
+    }
+  })();
+</script>
+</body>
+</html>
